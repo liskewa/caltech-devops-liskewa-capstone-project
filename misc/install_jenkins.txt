@@ -1,0 +1,25 @@
+# Useful information pulled from this URL:
+# https://www.jenkins.io/doc/tutorials/tutorial-for-installing-jenkins-on-AWS/
+
+
+
+
+sudo yum update –y
+sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+sudo yum upgrade
+sudo amazon-linux-extras install java-openjdk11 -y
+sudo yum install jenkins -y
+sudo usermod -a -G docker jenkins
+sudo systemctl start jenkins
+
+sudo systemctl status jenkins
+
+
+
+
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+#  Install suggested plugins
+#  Install Amazon EC2 plugin
+#  Install Docker
+#  Install Git
