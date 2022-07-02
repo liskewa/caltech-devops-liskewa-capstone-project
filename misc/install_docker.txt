@@ -1,3 +1,9 @@
+# Useful information pulled from this URL:
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/create-container-image.html
+
+
+
+
 sudo yum update -y
 sudo yum install docker -y
 sudo service docker start
