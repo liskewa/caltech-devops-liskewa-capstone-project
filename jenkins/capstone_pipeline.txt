@@ -1,0 +1,75 @@
+pipeline {
+    agent any
+    environment {
+        PRJNAME = "caltech-devops-liskewa-capstone-project"
+        DKR_TAG = "warrenliske/${PRJNAME}:${BUILD_NUMBER}"
+    }
+    stages {
+        stage('Setup') {
+            steps {
+                echo "Starting Setup"
+                sh "printenv"
+                echo "Finishing Setup"
+            }
+        }
+        stage('Fetching Source Code') {
+            steps {
+                echo "Starting Fetching Source Code "
+                sh "git --version"
+                sh "pwd"
+                sh "cd ${WORKSPACE}"
+                sh "rm -fr ${PRJNAME}"
+                sh "git clone https://github.com/liskewa/${PRJNAME}.git"
+                sh "ls -lR ${WORKSPACE}"
+                echo "Finishing Fetching Source Code"
+            }
+        }
+        stage("Building Docker Image") {
+            steps {
+                echo "Starting Building Docker Image"
+                sh "whoami"
+                sh "docker build -t ${DKR_TAG} ${WORKSPACE}/${PRJNAME}/docker"
+                sh "docker images"
+                echo "Finishing Building Docker Image"
+            }
+        }
+        stage('Setup Test Environment') {
+            steps {
+                echo 'Starting Project Containers'
+                sh "docker run --name ${BUILD_TAG} --detach --publish 80:80 --volume ${WORKSPACE}/${PRJNAME}/html:/var/www/html ${DKR_TAG}"
+                echo "docker ps"
+                echo 'Finishing Test Environment'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Starting Test'
+                sh "curl http://34.226.194.19:80 > main_page.txt"
+                sh "cat main_page.txt"
+                sh "cmp ${WORKSPACE}/${PRJNAME}/html/index.html main_page.txt"
+                echo 'Finishing Test'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Starting Deploy'
+                withDockerRegistry(credentialsId: "dockerhub", url: "") {
+                    sh "docker push warrenliske/${PRJNAME}:${BUILD_NUMBER}"
+                }
+                echo 'Finishing Deploy'
+            }
+        }
+        stage('Teardown') {
+            steps {
+                echo 'Starting Teardown'
+                echo "Teardown - Stopping running containers"
+                sh "docker stop ${BUILD_TAG}"
+                echo "docker ps"
+                echo "Teardown - Removing images from local registry"
+                sh "docker image rm -f ${DKR_TAG}"
+                sh "docker images"
+                echo 'Finishing Teardown'
+            }
+        }
+    }
+}
